@@ -1,0 +1,18 @@
+This project is a simple experiment intended to benchmark the performance of hardware accelerated 3D transforms using CSS in WebKit browsers.
+
+At this point, it looks rather promising (IMHO).
+
+The page can be viewed in Chrome, Safari and Safari Mobile.
+
+When objects become too numerous :
+- Chrome does not display more than 300(? - hardware related) and hides the rest
+
+- Safari tries to display everything, but the framerate suffers
+
+- Safari Mobile does pretty well, but craches above a certain (not stable) limit.
+The page made my iPad 2 reboot this morning.
+
+
+This page uses sole's Tween.js engine - http://github.com/sole/tween.js
+
+Experiment by @boblemarin - http://minimal.be

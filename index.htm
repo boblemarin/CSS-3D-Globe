@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+        <meta charset="utf-8" />
+		<meta name='HandheldFriendly' content='True' />
+		<meta name='viewport' content='width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=0' />
+        <title>CSS 3D GLOBE</title>
+		<script type="text/javascript" src="Tween.js"></script>
+		<style>
+		
+* {
+ 	-webkit-touch-callout: none;
+	-webkit-text-size-adjust: none;
+	-webkit-tap-highlight-color: rgba(0,0,0,0); 
+	-webkit-user-select: none; 
+}
+		
+			html, body { height: 100%; }
+body {
+	background: #000;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	margin: 0px;
+	padding: 0px;
+	background-image: url("img/texture0.jpg");
+}
+
+div#container { 
+	-webkit-perspective: 800;
+	-webkit-perspective-origin: 0 0;
+	-webkit-transform-origin: 0 0;
+	-webkit-transform: translateZ( 0px );
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	margin: 0px;
+	padding: 0px;
+}
+
+div#rotator {
+	position: absolute;
+	top: -128px;
+	margin: 0px;
+	padding: 0px;
+	-webkit-transform-style: preserve-3d;
+	-webkit-transform: translateZ( -700px );
+}
+
+.img3D {
+	position: absolute;
+	top: 0px;
+	left: -128px;
+	-webkit-transform: translateZ( 0px );
+	/*
+	width: 256px;
+	height: 256px;
+	*/
+}
+
+#debug {
+	color: #FFF;
+	position: absolute;
+	bottom: 0px;
+	left: 0px;
+	width: 100%;
+	text-align: center;
+	font-family: courier;
+	z-index: 10;
+	-webkit-transform: translateZ( 0px );
+}
+
+a {
+	display: inline-block;
+	color: #FFF;
+	background-color: rgba( 0,0,0, .6);
+	padding: 20px;
+	margin: 10px;
+	font-weight: bold;
+	
+     -moz-border-radius: 12px; 
+  -webkit-border-radius: 12px; 
+          border-radius: 12px; 
+
+
+  -moz-background-clip: padding; -webkit-background-clip: padding-box; background-clip: padding-box; 
+		-webkit-transform: translateZ( 0px );
+
+}
+			
+		</style>
+		
+		<script>
+		
+var container, zi,
+	rotY = 0,
+	//images = [],
+	nImg = 8,
+	cImg = 0,
+	tween,
+	debug,
+	position = { x: 0, y: 0, z: 0, rx: 0, ry: 0, rz: 0 },
+	n = 0,
+	touchX,
+	touchY,
+	touchID,
+	iteration,
+	ps = 128;
+	
+function init() {
+	
+	var url = window.location.href;
+	iteration = Number(url.substr( url.indexOf("=")+1 ) );
+	
+	if ( !iteration ) iteration = 20;
+	
+	debug = document.getElementById("message");
+	container = document.getElementById( "rotator" );
+	for( i = 0; i < nImg; i++ )
+	{
+		var img = document.createElement( "img" );
+		img.src = "img/texture" + (i+1) + ".jpg";
+		img.className = "img3D";
+		img.style.width = img.style.height = "128px";
+		var z = 440;//Math.round( Math.random() * 300 + 200 );
+		var ry = ( 360 / nImg * i );
+		var rx = 0;//Math.round( Math.random() * 50  );
+		img.style.webkitTransform = "rotateY( " + ry + "deg ) rotateX( "+rx+"deg ) translateZ( "+z+"px )";
+		container.appendChild( img );
+		n += 1;
+		
+		for( var j =  0; j < iteration; j++ )
+		{
+			img = document.createElement( "img" );
+			img.src = "img/texture" + (i+1) + ".jpg";
+			img.className = "img3D";
+			z = Math.round( 600 + Math.random() * 300 );
+			rx = Math.round( Math.random() * 180 - 90  );
+			img.style.width = ps + "px";
+			img.style.height = (ps>>4) + "px";
+			//img.style.height = "-" + (ps>>1) + "px";
+			img.style.webkitTransform = "rotateY( " + Math.round( Math.random() * 60 - 30 + ry ) + "deg ) rotateX( "+rx+"deg ) translateZ( "+z+"px )";
+			container.appendChild( img );
+			
+			n += 1;
+		}
+		
+		
+	}
+	
+	msg( "<b>" + n + " objects</b> on screen " );
+	
+	document.getElementById("link20").addEventListener("touchstart",onLink );
+	document.getElementById("link40").addEventListener("touchstart",onLink );
+	document.getElementById("link80").addEventListener("touchstart",onLink );
+	document.getElementById("link120").addEventListener("touchstart",onLink );
+	
+	if ( 'createTouch' in document )
+	{
+		document.addEventListener( "touchstart", onTouchStart );
+		document.addEventListener( "touchmove", onTouchMove );
+		document.addEventListener( "touchend", onTouchEnd );
+	}
+	else
+	{
+		document.addEventListener( "mousedown", onMouseDown );
+	}
+	
+	TWEEN.start();
+	onTweenComplete();
+}
+
+function onLink( evt ) {
+	switch( evt.target.id )
+	{
+		case "link20":
+			window.location = "?n=20";
+			break;
+		case "link40":
+			window.location = "?n=40";
+			break;
+		case "link80":
+			window.location = "?n=80";
+			break;
+		case "link120":
+			window.location = "?n=120";
+			break;
+	}
+}
+
+function onMouseDown( evt ) {
+	if ( tween )
+	{
+		tween.stop();
+		tween = null;
+	}
+	
+	touchX = evt.pageX;
+	touchY = evt.pageY;
+	document.addEventListener( "mousemove", onMouseMove );
+	document.addEventListener( "mouseup", onMouseUp );
+}
+function onMouseMove( evt ) {
+	position.ry -= ( evt.pageX - touchX ) * .3;
+	position.rx += ( evt.pageY - touchY ) * .3;
+	touchX = evt.pageX;
+	touchY = evt.pageY;
+	tweenUpdate();
+}
+function onMouseUp( evt ) {
+	document.removeEventListener( "mousemove", onMouseMove );
+	document.removeEventListener( "mouseup", onMouseUp );
+	onTweenComplete();
+}
+
+function onTouchStart(evt) {
+	if ( tween )
+	{
+		tween.stop();
+		tween = null;
+	}
+
+	var t = evt.changedTouches[0];
+	touchID = t.identifier;
+	touchX = t.pageX;
+	touchY = t.pageY;
+	
+	evt.preventDefault();
+}
+
+function onTouchMove( evt ) {
+	var t = evt.changedTouches[0];
+	if ( t.identifier == touchID )
+	{
+		position.ry -= ( t.pageX - touchX ) * .3;
+		position.rx += ( t.pageY - touchY ) * .3;
+		touchX = t.pageX;
+		touchY = t.pageY;
+		tweenUpdate();
+	}
+	evt.preventDefault();
+}
+
+function onTouchEnd( evt ) {
+	var t = evt.changedTouches[0];
+	if ( t.identifier == touchID )
+	{
+		onTweenComplete();
+	}
+}
+
+function tweenUpdate() {
+	container.style.webkitTransform = "translateZ( -700px ) rotateX(" + (-position.rx) + "deg) rotateY( " + (-position.ry) + "deg )";
+}
+
+function onTweenComplete() {
+	tween = new TWEEN.Tween(position)
+		.delay( Math.round( Math.random() * 800 + 150 ))
+		.to({
+			rx: Math.random()*160-80, ry: Math.random() * 360 - 180
+		}, Math.round( Math.random() * 800 + 300))
+		.easing(TWEEN.Easing.Quadratic.EaseInOut)
+		.onUpdate(tweenUpdate)
+		.onComplete(onTweenComplete);
+	
+	tween.start();
+}
+
+function msg( t )
+{
+	debug.innerHTML = t;
+}
+			
+		</script>
+</head>
+
+<body onload="init();">
+	<div id="debug"><span id="message"> </span><br/><a href="?n=20" id="link20">168</a><a href="?n=40" id="link40">328</a><a href="?n=80" id="link80">648</a><a href="?n=120" id="link120">968</a></div>
+	<div id="container">
+			<div id="rotator">
+				
+			</div>
+	</div>
+	
+</body>
+</html>
